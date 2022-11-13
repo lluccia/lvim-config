@@ -1,5 +1,5 @@
-vim.opt_local.shiftwidth = 2
-vim.opt_local.tabstop = 2
+vim.opt_local.shiftwidth = 4
+vim.opt_local.tabstop = 4
 vim.opt_local.cmdheight = 2 -- more space in the neovim command line for displaying messages
 
 local capabilities = require("lvim.lsp").common_capabilities()
@@ -52,10 +52,7 @@ local config = {
 	-- See: https://github.com/eclipse/eclipse.jdt.ls#running-from-the-command-line
 	cmd = {
 
-		-- 💀
-		"java", -- or '/path/to/java11_or_newer/bin/java'
-		-- depends on if `java` is in your $PATH env variable and if it points to the right version.
-
+		home .. "/.sdkman/candidates/java/17.0.4.1-tem/bin/java",
 		"-Declipse.application=org.eclipse.jdt.ls.core.id1",
 		"-Dosgi.bundles.defaultStartLevel=4",
 		"-Declipse.product=org.eclipse.jdt.ls.core.product",
@@ -68,23 +65,10 @@ local config = {
 		"java.base/java.util=ALL-UNNAMED",
 		"--add-opens",
 		"java.base/java.lang=ALL-UNNAMED",
-
-		-- 💀
 		"-jar",
 		vim.fn.glob(home .. "/.local/share/nvim/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_*.jar"),
-		-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^
-		-- Must point to the                                                     Change this to
-		-- eclipse.jdt.ls installation                                           the actual version
-
-		-- 💀
 		"-configuration",
 		home .. "/.local/share/nvim/mason/packages/jdtls/config_" .. CONFIG,
-		-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^
-		-- Must point to the                      Change to one of `linux`, `win` or `mac`
-		-- eclipse.jdt.ls installation            Depending on your system.
-
-		-- 💀
-		-- See `data directory configuration` section in the README
 		"-data",
 		workspace_dir,
 	},
@@ -92,9 +76,6 @@ local config = {
 	-- on_attach = require("lvim.lsp").on_attach,
 	capabilities = capabilities,
 
-	-- 💀
-	-- This is the default if not provided, you can remove it. Or adjust as needed.
-	-- One dedicated LSP server & client will be started per unique root_dir
 	root_dir = root_dir,
 
 	-- Here you can configure eclipse.jdt.ls specific settings
@@ -115,12 +96,16 @@ local config = {
 				updateBuildConfiguration = "interactive",
 				runtimes = {
 					{
-						name = "JavaSE-11",
-						path = "~/.sdkman/candidates/java/11.0.2-open",
+						name = "JavaSE-1.8",
+						path = "~/.sdkman/candidates/java/8.0.345-tem",
 					},
 					{
-						name = "JavaSE-18",
-						path = "~/.sdkman/candidates/java/18.0.1.1-open",
+						name = "JavaSE-11",
+						path = "~/.sdkman/candidates/java/11.0.17-tem",
+					},
+					{
+						name = "JavaSE-17",
+						path = "~/.sdkman/candidates/java/17.0.4.1-tem",
 					},
 				},
 			},
@@ -151,6 +136,7 @@ local config = {
 		signatureHelp = { enabled = true },
 		completion = {
 			favoriteStaticMembers = {
+				"org.assertj.Assertions.assertThat",
 				"org.hamcrest.MatcherAssert.assertThat",
 				"org.hamcrest.Matchers.*",
 				"org.hamcrest.CoreMatchers.*",
@@ -205,15 +191,20 @@ config["on_attach"] = function(client, bufnr)
 
 		vim.keymap.set(mode, lhs, rhs, { silent = true, desc = desc, buffer = bufnr, noremap = true })
 	end
-	map("n", "<leader>Co", jdtls.organize_imports(), "Organize Imports")
-	map("n", "<leader>Cv", jdtls.extract_variable(), "Extract Variable")
-	map("n", "<leader>Cc", jdtls.extract_constant(), "Extract Constant")
-	map("n", "<leader>Ct", jdtls.test_nearest_method(), "Test Method")
-	map("n", "<leader>CT", jdtls.test_class(), "Test Class")
-	map("n", "<leader>Cu", "<Cmd>JdtUpdateConfig<CR>", "Update Config")
-	map("v", "<leader>Cv", "<Esc><Cmd>lua require('jdtls').extract_variable(true)<CR>", "Extract Variable")
-	map("v", "<leader>Cc", "<Esc><Cmd>lua require('jdtls').extract_constant(true)<CR>", "Extract Constant")
-	map("v", "<leader>Cm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>", "Extract Method")
+	map("n", "<leader>jo", "<Cmd>lua require('jdtls').organize_imports()<CR>", "Organize Imports")
+
+	map("n", "<leader>jv", "<Cmd>lua require('jdtls').extract_variable()<CR>", "Extract Variable")
+	map("n", "<leader>jc", "<Cmd>lua require('jdtls').extract_constant()<CR>", "Extract Constant")
+	map("n", "<leader>jm", "<Cmd>lua require('jdtls').extract_method()<CR>", "Extract Method")
+
+	map("n", "<leader>jt", "<Cmd>lua require('jdtls').test_nearest_method()<CR>", "Test Method")
+	map("n", "<leader>jT", "<Cmd>lua require('jdtls').test_class()<CR>", "Test Class")
+
+	map("n", "<leader>ju", "<Cmd>JdtUpdateConfig<CR>", "Update Config")
+
+	map("v", "<leader>jv", "<Esc><Cmd>lua require('jdtls').extract_variable(true)<CR>", "Extract Variable")
+	map("v", "<leader>jc", "<Esc><Cmd>lua require('jdtls').extract_constant(true)<CR>", "Extract Constant")
+	map("v", "<leader>jm", "<Esc><Cmd>lua require('jdtls').extract_method(true)<CR>", "Extract Method")
 end
 
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
